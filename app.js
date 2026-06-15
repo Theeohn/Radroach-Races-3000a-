@@ -17,7 +17,7 @@
   // Game States
   let gameState = 'TITLE_SCREEN'; // 'TITLE_SCREEN', 'COUNTDOWN', 'RACING', 'GAMEOVER'
   let winnerId = -1;
-  let countdownValue = 3;
+  let countdownValue = 8;
 
   // Radroach Configuration
   const BLOCK_SIZE = 14; 
@@ -143,18 +143,18 @@
 
   function handleKnobStart() {
     if (gameState === 'TITLE_SCREEN') {
-      Pip.audioStart('UI/OK.wav');
+      Pip.audioStart('HOLO/RADROACH_RACES/BUGLE.WAV');
       Pip.removeListener("knob1", handleKnobStart);
       startCountdown();
     } else if (gameState === 'GAMEOVER') {
-      Pip.playSound('TAB');
+      Pip.playSound('HOLO/RADROACH_RACES/WINNER.WAV');
       showTitleScreen();
     }
   }
 
   function startCountdown() {
     gameState = 'COUNTDOWN';
-    countdownValue = 3;
+    countdownValue = 8;
     
     // Automatically select map index routing before launching the timer
     currentMapId = Math.randInt(0, 4);
@@ -197,7 +197,7 @@
       h.drawString(countdownValue.toString(), SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
       countdownValue--;
     } else {
-      Pip.audioStart('UI/OK.wav');
+      Pip.audioStart('HOLO/RADROACH_RACES/BUGLE.WAV');
       clearInterval(countdownTimer);
       countdownTimer = null;
       gameState = 'RACING';
@@ -294,7 +294,7 @@ function updatePhysics() {
           r.y + BLOCK_SIZE >= goalPos.y && r.y <= goalPos.y + goalPos.h) {
         gameState = 'GAMEOVER';
         winnerId = r.id;
-        Pip.audioStart('UI/REWARD.wav');
+        Pip.audioStart('HOLO/RADROACH_RACES/WINNER.WAV');
         break;
       }
     }
@@ -325,7 +325,7 @@ function updatePhysics() {
     h.drawString(nameStr, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 18);
     
     h.setFont("Monofonto14");
-    h.drawString("PRESS CLICK WHEEL TO RESTART ENGINE", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 8);
+    h.drawString("PRESS CLICK WHEEL TO RESTART", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 8);
   }
 
   function mainLoop() {
