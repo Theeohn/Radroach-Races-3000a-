@@ -7,15 +7,14 @@
 (function() {
   let mainLoopInterval = null;
   let countdownTimer = null;
-  let clickWatchHandle = null;
 
   // Game States
   let gameState = 'TITLE_SCREEN';
   let winnerId = -1;
-  let countdownValue = 8;
+  let countdownValue = 5;
   let currentMapId = 0;
   let trackWalls = [];
-  let goalPos = { x: 0, y: 0, w: 30, h: 30 };
+  let goalPos = { x: 0, y: 0, w: 14, h: 14 };
   let startX = 0;
   let startYBase = 0;
   let radroaches = [];
@@ -27,7 +26,7 @@
   const SHAPE_NAMES = { 1: 'SQUARE', 2: 'TRIANGLE', 3: 'DIAMOND', 4: 'CROSS', 5: 'HEXAGON' };
 
   // Play area: 480x320 screen, with margin
-  // PLAY_AREA: x1=15, x2=465, y1=45, y2=295
+  // PLAY_AREA: x1=18, x2=465, y1=18, y2=298
 
   // MAP_BLUEPRINTS derived from Horse Race Test map images.
   // Walls are line segments (x1,y1)-(x2,y2) representing internal barriers.
@@ -35,7 +34,7 @@
   // Start positions are from the yellow START box (top-left region of each map).
   // Goal positions are from the checkered flag square in each map image.
   //
-  // Map coordinate space: 480x320, play area inset 15px each side, 45px top, 25px bottom.
+  // Map coordinate space: 480x320, play area inset x1=18, x2=465, y1=18, y2=298.
   // Wall coordinates are scaled/mapped from each image's proportional layout.
 
   const MAP_BLUEPRINTS = [
@@ -46,11 +45,13 @@
       start: { x: 30, y: 55 },
       walls: [
         // Upper horizontal divider — splits top corridor from mid section
-        { x1: 15,  y1: 155, x2: 270, y2: 155 },
+        { x1: 18,  y1: 155, x2: 270, y2: 155 },
         // Lower horizontal divider — creates bottom corridor
         { x1: 200, y1: 220, x2: 465, y2: 220 },
-        // Left vertical connector — joins upper and mid dividers
-        { x1: 270, y1: 55,  x2: 270, y2: 155 },
+        // Left vertical connector — joins upper and mid dividers.
+        // Starts at y=80 (not the pen's top edge) so a 35px gap remains at the
+        // top-right corner of the start pen — wide enough for a 14px roach to escape through.
+        { x1: 270, y1: 80,  x2: 270, y2: 155 },
         // Right vertical connector — joins mid and lower dividers
         { x1: 200, y1: 155, x2: 200, y2: 285 }
       ]
@@ -62,7 +63,7 @@
       start: { x: 30, y: 100 },
       walls: [
         // Top horizontal bar cutting upper-right off
-        { x1: 15,  y1: 95,  x2: 185, y2: 95  },
+        { x1: 18,  y1: 95,  x2: 185, y2: 95  },
         // Vertical drop from top bar — forms left wall of funnel
         { x1: 185, y1: 95,  x2: 185, y2: 200 },
         // Bottom of funnel — horizontal join
@@ -108,24 +109,12 @@
       start: { x: 30, y: 55 },
       walls: [
         // Upper horizontal band — forces traffic to split above or below
-        { x1: 15,  y1: 165, x2: 355, y2: 165 },
+        { x1: 18,  y1: 165, x2: 355, y2: 165 },
         // Lower horizontal band — second level split
         { x1: 90,  y1: 240, x2: 465, y2: 240 }
       ]
     }
   ];
-
-  // ─── Sound helpers ────────────────────────────────────────────────────────
-
-  function playBounceSound() {
-    if (bounceSoundCount >= 2) return;
-    bounceSoundCount++;
-    Pip.playSound('HOLO/RADROACH_RACES/INSECTFLAP.WAV');
-    // Release the slot after ~120ms (approximate SCROLL sound duration)
-    setTimeout(function() {
-      if (bounceSoundCount > 0) bounceSoundCount--;
-    }, 120);
-  }
 
   // ─── Title Screen ─────────────────────────────────────────────────────────
 
@@ -134,7 +123,7 @@
     winnerId = -1;
 
     h.setColor(0).fillRect(0, 0, 480, 320);
-    h.setColor(1).drawRect(15, 45, 465, 295);
+    h.setColor(1).drawRect(18, 18, 465, 298);
 
     h.setFont("Monofonto23").setFontAlign(0, -1).setColor(3);
     h.drawString("Radroach Races", 240, 55);
@@ -170,17 +159,13 @@
     h.flip();
     Pip.lastFlip = getTime();
 
-    Pip.removeListener("knob1", handleKnobStart);
-    Pip.on("knob1", handleKnobStart);
-
-    clearWatch(clickWatchHandle);
-    clickWatchHandle = setWatch(handleKnobStart, ENC1_PRESS, { repeat: true, edge: "rising", debounce: 50 });
+    Pip.onExclusive("knob1", handleKnobStart);
   }
 
   function handleKnobStart(dir) {
+    if (dir !== 0) return;
     if (gameState === 'TITLE_SCREEN') {
       Pip.audioStart('HOLO/RADROACH_RACES/BUGLE.WAV');
-      Pip.removeListener("knob1", handleKnobStart);
       startCountdown();
     } else if (gameState === 'GAMEOVER') {
       showTitleScreen();
@@ -191,7 +176,7 @@
 
   function startCountdown() {
     gameState = 'COUNTDOWN';
-    countdownValue = 8;
+    countdownValue = 5;
 
     currentMapId = Math.randInt(5);
     const bp = MAP_BLUEPRINTS[currentMapId];
@@ -201,16 +186,19 @@
     startX = bp.start.x;
     startYBase = bp.start.y;
 
-    // Initialise radroaches with DVD-bounce style velocities.
-    // vx is always positive (moving right initially), vy alternates.
-    // Speed range: 1.5 – 1.5 px/tick for lively movement.
+    // Initialise radroaches DVD-logo style: each gets its own random angle,
+    // so every roach heads off in a near-random direction from the start.
+    // Speed magnitude stays constant (2.8 px/tick); only the angle varies.
     radroaches = [
-      { id: 1, shape: 'square',   x: startX, y: startYBase,      vx:  1.5 + Math.randInt(20) * 0.1, vy:  0.8 + Math.randInt(15) * 0.1 },
-      { id: 2, shape: 'triangle', x: startX, y: startYBase + 18, vx:  1.5 + Math.randInt(20) * 0.1, vy: -(0.8 + Math.randInt(15) * 0.1) },
-      { id: 3, shape: 'diamond',  x: startX, y: startYBase + 36, vx:  1.5 + Math.randInt(20) * 0.1, vy:  0.8 + Math.randInt(15) * 0.1 },
-      { id: 4, shape: 'cross',    x: startX, y: startYBase + 54, vx:  1.5 + Math.randInt(20) * 0.1, vy: -(0.8 + Math.randInt(15) * 0.1) },
-      { id: 5, shape: 'hexagon',  x: startX, y: startYBase + 72, vx:  1.5 + Math.randInt(20) * 0.1, vy:  0.8 + Math.randInt(15) * 0.1 }
+      { id: 1, shape: 'square',   x: startX, y: startYBase,      vx: 0, vy: 0 },
+      { id: 2, shape: 'triangle', x: startX, y: startYBase + 18, vx: 0, vy: 0 },
+      { id: 3, shape: 'diamond',  x: startX, y: startYBase + 36, vx: 0, vy: 0 },
+      { id: 4, shape: 'cross',    x: startX, y: startYBase + 54, vx: 0, vy: 0 },
+      { id: 5, shape: 'hexagon',  x: startX, y: startYBase + 72, vx: 0, vy: 0 }
     ];
+    for (let i = 0; i < radroaches.length; i++) {
+      setRandomVelocity(radroaches[i], 2.8);
+    }
 
     if (countdownTimer) clearInterval(countdownTimer);
     countdownTimer = setInterval(tickCountdown, 1000);
@@ -229,12 +217,10 @@
     }
 
     if (countdownValue > 0) {
-      Pip.playSound('SCROLL');
       h.setFont("Monofonto96").setFontAlign(0, 0).setColor(3);
       h.drawString(countdownValue.toString(), 240, 160);
       countdownValue--;
     } else {
-      Pip.audioStart('HOLO/RADROACH_RACES/BUGLE.WAV');
       clearInterval(countdownTimer);
       countdownTimer = null;
       gameState = 'RACING';
@@ -267,7 +253,7 @@
 
   function drawTrack() {
     h.setColor(1);
-    h.drawRect(15, 45, 465, 295);
+    h.drawRect(18, 18, 465, 298);
 
     for (let i = 0; i < trackWalls.length; i++) {
       const w = trackWalls[i];
@@ -276,32 +262,57 @@
 
     // Map label top-left
     h.setFont("Monofonto14").setFontAlign(-1, -1).setColor(2);
-    h.drawString("Map " + (currentMapId + 1), 20, 48);
+    h.drawString("Map " + (currentMapId + 1), 21, 21);
 
-    // Goal marker (bright block)
+    // Goal marker (bright block, same footprint as a radroach)
     h.setColor(3);
     h.fillRect(goalPos.x, goalPos.y, goalPos.x + goalPos.w, goalPos.y + goalPos.h);
     // Stem detail above goal
     h.setColor(2);
-    h.fillRect(goalPos.x + 12, goalPos.y - 6, goalPos.x + 18, goalPos.y);
-    h.fillRect(goalPos.x - 4, goalPos.y + 10, goalPos.x, goalPos.y + 16);
+    h.fillRect(goalPos.x + 4, goalPos.y - 6, goalPos.x + 10, goalPos.y);
+    h.fillRect(goalPos.x - 4, goalPos.y + 4, goalPos.x, goalPos.y + 10);
   }
 
   // ─── Physics ──────────────────────────────────────────────────────────────
+
+  // Set a roach's velocity to a random angle at the given speed magnitude.
+  // Used both for the initial DVD-logo-style launch and for the small
+  // randomised kick applied after every bounce.
+  function setRandomVelocity(r, speed) {
+    // Random angle in [0, 2*PI). Math.randInt(360) gives a degree value,
+    // converted to radians — avoids floating point random() per the no-Math.random rule.
+    const deg = Math.randInt(360);
+    const rad = deg * 0.017453292519943295;
+    r.vx = Math.cos(rad) * speed;
+    r.vy = Math.sin(rad) * speed;
+  }
+
+  // Nudge an existing velocity vector by a random angle (±40°) while
+  // preserving its speed — keeps the DVD-logo "near random, not truly random"
+  // bounce: a real reflection, with a touch of unpredictability so paths
+  // never repeat the exact same loop.
+  function jitterVelocity(r) {
+    const speed = Math.sqrt(r.vx * r.vx + r.vy * r.vy);
+    const curAngle = Math.atan2(r.vy, r.vx);
+    const jitterDeg = Math.randInt(9) - 40;
+    const newAngle = curAngle + jitterDeg * 0.017453292519943295;
+    r.vx = Math.cos(newAngle) * speed;
+    r.vy = Math.sin(newAngle) * speed;
+  }
 
   function checkWallCollision(r) {
     let bounced = false;
 
     // Play area boundary bounce
-    if (r.x <= 15) {
-      r.x = 15; r.vx = Math.abs(r.vx); bounced = true;
+    if (r.x <= 18) {
+      r.x = 18; r.vx = Math.abs(r.vx); bounced = true;
     } else if (r.x + BLOCK_SIZE >= 465) {
       r.x = 465 - BLOCK_SIZE; r.vx = -Math.abs(r.vx); bounced = true;
     }
-    if (r.y <= 45) {
-      r.y = 45; r.vy = Math.abs(r.vy); bounced = true;
-    } else if (r.y + BLOCK_SIZE >= 295) {
-      r.y = 295 - BLOCK_SIZE; r.vy = -Math.abs(r.vy); bounced = true;
+    if (r.y <= 18) {
+      r.y = 18; r.vy = Math.abs(r.vy); bounced = true;
+    } else if (r.y + BLOCK_SIZE >= 298) {
+      r.y = 298 - BLOCK_SIZE; r.vy = -Math.abs(r.vy); bounced = true;
     }
 
     // Internal wall bounce
@@ -312,9 +323,9 @@
       const wy1 = Math.min(w.y1, w.y2);
       const wy2 = Math.max(w.y1, w.y2);
 
-      // Broad AABB overlap with a 3px thickness buffer around the line
-      if (r.x + BLOCK_SIZE >= wx1 - 3 && r.x <= wx2 + 3 &&
-          r.y + BLOCK_SIZE >= wy1 - 3 && r.y <= wy2 + 3) {
+      // Broad AABB overlap with a 4px thickness buffer around the line
+      if (r.x + BLOCK_SIZE >= wx1 - 4 && r.x <= wx2 + 4 &&
+          r.y + BLOCK_SIZE >= wy1 - 4 && r.y <= wy2 + 4) {
 
         if (wy2 - wy1 < 6) {
           // Horizontal wall — flip vy
@@ -330,7 +341,48 @@
       }
     }
 
-    if (bounced) playBounceSound();
+    if (bounced) {
+      jitterVelocity(r);
+    }
+  }
+
+  // Roach-vs-roach collision: simple elastic-style swap of velocity
+  // components along with a separating push so they never overlap,
+  // plus the same DVD-logo style jitter as a wall bounce.
+  function checkRoachCollisions() {
+    for (let i = 0; i < radroaches.length; i++) {
+      for (let j = i + 1; j < radroaches.length; j++) {
+        const a = radroaches[i];
+        const b = radroaches[j];
+
+        if (a.x < b.x + BLOCK_SIZE && a.x + BLOCK_SIZE > b.x &&
+            a.y < b.y + BLOCK_SIZE && a.y + BLOCK_SIZE > b.y) {
+
+          // Push apart along the axis of greatest overlap
+          const dx = (a.x + 7) - (b.x + 7);
+          const dy = (a.y + 7) - (b.y + 7);
+
+          if (Math.abs(dx) > Math.abs(dy)) {
+            const push = (dx >= 0) ? 1 : -1;
+            a.x += push * 1.5;
+            b.x -= push * 1.5;
+            const avx = a.vx;
+            a.vx = Math.abs(b.vx) * push;
+            b.vx = -Math.abs(avx) * push;
+          } else {
+            const push = (dy >= 0) ? 1 : -1;
+            a.y += push * 1.5;
+            b.y -= push * 1.5;
+            const avy = a.vy;
+            a.vy = Math.abs(b.vy) * push;
+            b.vy = -Math.abs(avy) * push;
+          }
+
+          jitterVelocity(a);
+          jitterVelocity(b);
+        }
+      }
+    }
   }
 
   function updatePhysics() {  "ram";
@@ -343,15 +395,21 @@
       h.fillRect(r.x - 2, r.y - 2, r.x + BLOCK_SIZE + 2, r.y + BLOCK_SIZE + 2);
     }
 
-    // Move and check collisions
+    // Move and check wall/edge collisions
     for (let i = 0; i < radroaches.length; i++) {
       const r = radroaches[i];
       r.x += r.vx;
       r.y += r.vy;
 
       checkWallCollision(r);
+    }
 
-      // Goal collision
+    // Roach-vs-roach collisions (after movement, before goal check)
+    checkRoachCollisions();
+
+    // Goal collision — only one roach can occupy the mutfruit
+    for (let i = 0; i < radroaches.length; i++) {
+      const r = radroaches[i];
       if (r.x + BLOCK_SIZE >= goalPos.x && r.x <= goalPos.x + goalPos.w &&
           r.y + BLOCK_SIZE >= goalPos.y && r.y <= goalPos.y + goalPos.h) {
         gameState = 'GAMEOVER';
@@ -377,10 +435,10 @@
   }
 
   function displayWinner() {
-    h.setColor(1).fillRect(120, 130, 360, 190);
-    h.setColor(0).drawRect(122, 132, 358, 188);
+    h.setColor(0).fillRect(120, 130, 360, 190);
+    h.setColor(3).drawRect(122, 132, 358, 188);
 
-    h.setFont("Monofonto16").setFontAlign(0, -1).setColor(0);
+    h.setFont("Monofonto16").setFontAlign(0, -1).setColor(2);
     h.drawString(SHAPE_NAMES[winnerId] + " ROACH WINS!", 240, 142);
     h.setFont("Monofonto14");
     h.drawString("PRESS LEFT WHEEL TO RESTART", 240, 168);
@@ -407,7 +465,6 @@
       if (mainLoopInterval) { clearInterval(mainLoopInterval); mainLoopInterval = null; }
       if (countdownTimer)   { clearInterval(countdownTimer);   countdownTimer = null; }
       Pip.removeListener("knob1", handleKnobStart);
-      clearWatch(clickWatchHandle);
       Pip.audioStop();
     }
   };
