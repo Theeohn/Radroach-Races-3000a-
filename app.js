@@ -24,84 +24,85 @@
   // trackWalls will be a flattened Int16Array instead of an array of objects
   let trackWalls = new Int16Array(0); 
   
-  let goalPos = { x: 0, y: 0, w: 11, h: 11 };
+  let goalPos = { x: 0, y: 0, w: 16, h: 16, hitW: 15, hitH: 15 };
   let startX = 0;
   let startYBase = 0;
   let radroaches = [];
-
-  // Sound limiter — max 2 bounce sound instances at once
-  let bounceSoundCount = 0;
 
   let trackDirty = 1;
 
   const SHAPE_NAMES = { 1: 'SQUARE', 2: 'TRIANGLE', 3: 'DIAMOND', 4: 'CROSS', 5: 'HEXAGON' };
 
   const SHAPES = {
-    square:   { half: 6.72, hitR: 9.51 },
-    triangle: { half: 7,    hitR: 9.91 },
-    diamond:  { half: 7.28, hitR: 7.29 },
-    cross:    { half: 7,    hitR: 7.63 },
-    hexagon:  { half: 7,    hitR: 7.83 } 
+    square:   { half: 7.48, hitR: 9.6  },
+    triangle: { half: 9.7, hitR: 9.9  },
+    diamond:  { half: 8.57, hitR: 9.9  },
+    cross:    { half: 7.92, hitR: 9.9  },
+    hexagon:  { half: 7.92, hitR: 9.9  } 
   };
 
   const MAP_BLUEPRINTS = [
     { // Map 1
-      goal: { x: 375, y: 200 },
-      start: { x: 30, y: 55 },
+      goal: { x: 42, y: 58 },
+      start: { x: 25, y: 150 },
       walls: [
-        { x1: 18,  y1: 155, x2: 270, y2: 155 },
-        { x1: 200, y1: 220, x2: 465, y2: 220 },
-        { x1: 270, y1: 80,  x2: 270, y2: 155 },
-        { x1: 200, y1: 155, x2: 200, y2: 285 }
+        { x1: 18,  y1: 95,  x2: 185, y2: 95 },
+        { x1: 185, y1: 95,  x2: 185, y2: 200 },
+        { x1: 185, y1: 200, x2: 310, y2: 200 },
+        { x1: 320, y1: 18,  x2: 320, y2: 85 }
       ]
     },
     { // Map 2
-      goal: { x: 40, y: 65 },
-      start: { x: 30, y: 120 },
-      walls: [
-        { x1: 18,  y1: 95,  x2: 185, y2: 95  },
-        { x1: 185, y1: 95,  x2: 185, y2: 200 },
-        { x1: 185, y1: 200, x2: 310, y2: 200 }
-      ]
-    },
-    { // Map 3
       goal: { x: 340, y: 50 },
       start: { x: 30, y: 185 },
       walls: [
-        { x1: 100, y1: 55,  x2: 100, y2: 170 },
-        { x1: 100, y1: 170, x2: 310, y2: 170 },
+        { x1: 100, y1: 60,  x2: 100, y2: 170 },
+        { x1: 100, y1: 135, x2: 310, y2: 135 },
         { x1: 210, y1: 220, x2: 465, y2: 220 }
+      ]
+    },
+    { // Map 3
+      goal: { x: 375, y: 200 },
+      start: { x: 30, y: 46 },
+      walls: [
+        { x1: 18,  y1: 155, x2: 270, y2: 155 },
+        { x1: 200, y1: 220, x2: 465, y2: 220 },
+        { x1: 270, y1: 95,  x2: 270, y2: 155 },
+        { x1: 200, y1: 155, x2: 200, y2: 298 }
       ]
     },
     { // Map 4
       goal: { x: 62, y: 145 },
-      start: { x: 63, y: 27 },
+      start: { x: 63, y: 25 },
       walls: [
         { x1: 18, y1: 125, x2: 360, y2: 125 },
         { x1: 115, y1: 205, x2: 360, y2: 205 },
-        { x1: 115, y1: 125, x2: 115, y2: 205},
+        { x1: 115, y1: 125, x2: 115, y2: 205 },
         { x1: 360, y1: 125, x2: 360, y2: 205 }
       ]
     },
     { // Map 5
       goal: { x: 135, y: 31 },
-      start: { x: 30, y: 197 },
+      start: { x: 30, y: 192 },
       walls: [
-        { x1: 18,  y1: 180, x2: 320, y2: 180 },
-        { x1: 320, y1: 180, x2: 320, y2: 80  },
-        { x1: 120, y1: 80,  x2: 320, y2: 80  },
-        { x1: 120, y1: 18,  x2: 120, y2: 80  },
+        { x1: 18,  y1: 180, x2: 285, y2: 180 },
+        { x1: 320, y1: 180, x2: 285, y2: 80 },
+        { x1: 120, y1: 80, x2: 320, y2: 80 },
+        { x1: 120, y1: 18, x2: 120, y2: 80 },
         { x1: 380, y1: 100, x2: 465, y2: 100 },
-        { x1: 380, y1: 100, x2: 380, y2: 298 }
+        { x1: 380, y1: 100, x2: 380, y2: 298 },
+        { x1: 355, y1: 18, x2: 355, y2: 56}
       ]
     },
     { // Map 6
       goal: { x: 75, y: 250 },
       start: { x: 63, y: 27 },
       walls: [
-        { x1: 18,  y1: 128, x2: 323, y2: 128 },
-        { x1: 323, y1: 128, x2: 323, y2: 70  },
-        { x1: 100, y1: 180, x2: 465, y2: 180 },
+        { x1: 18,  y1: 128, x2: 165, y2: 128 },
+        { x1: 196,  y1: 128, x2: 323, y2: 128 },
+        { x1: 323, y1: 128, x2: 323, y2: 90 },
+        { x1: 100, y1: 180, x2: 205, y2: 180 },
+        { x1: 255, y1: 180, x2: 465, y2: 180 },
         { x1: 319, y1: 180, x2: 319, y2: 264 },
         { x1: 18,  y1: 229, x2: 180, y2: 229 }
       ]
@@ -171,8 +172,7 @@
     currentMapId = Math.randInt(MAP_BLUEPRINTS.length);
     const bp = MAP_BLUEPRINTS[currentMapId];
     const bpWalls = bp.walls;
-    
-    // Flatten trackWalls and pre-calculate bounding boxes
+
     trackWalls = new Int16Array(bpWalls.length * 8); 
     for (let i = 0; i < bpWalls.length; i++) {
       let idx = i * 8;
@@ -193,15 +193,21 @@
     startYBase = bp.start.y;
 
     // Cache hitR directly onto the roach objects
+    // Shuffle spawn slots so roach order varies each race
+    const slots = [0, 20, 40, 60, 80];
+    for (let s = 4; s > 0; s--) {
+      const sv = Math.randInt(s + 1);
+      const tmp = slots[s]; slots[s] = slots[sv]; slots[sv] = tmp;
+    }
     radroaches = [
-      { id: 1, shape: 'square',   cx: startX + 7, cy: startYBase + 7,      vx: 0, vy: 0, hitR: SHAPES.square.hitR },
-      { id: 2, shape: 'triangle', cx: startX + 7, cy: startYBase + 7 + 18, vx: 0, vy: 0, hitR: SHAPES.triangle.hitR },
-      { id: 3, shape: 'diamond',  cx: startX + 7, cy: startYBase + 7 + 36, vx: 0, vy: 0, hitR: SHAPES.diamond.hitR },
-      { id: 4, shape: 'cross',    cx: startX + 7, cy: startYBase + 7 + 54, vx: 0, vy: 0, hitR: SHAPES.cross.hitR },
-      { id: 5, shape: 'hexagon',  cx: startX + 7, cy: startYBase + 7 + 72, vx: 0, vy: 0, hitR: SHAPES.hexagon.hitR }
+      { id: 1, shape: 'square',   cx: startX + 7, cy: startYBase + 7 + slots[0], vx: 0, vy: 0, hitR: SHAPES.square.hitR },
+      { id: 2, shape: 'triangle', cx: startX + 7, cy: startYBase + 7 + slots[1], vx: 0, vy: 0, hitR: SHAPES.triangle.hitR },
+      { id: 3, shape: 'diamond',  cx: startX + 7, cy: startYBase + 7 + slots[2], vx: 0, vy: 0, hitR: SHAPES.diamond.hitR },
+      { id: 4, shape: 'cross',    cx: startX + 7, cy: startYBase + 7 + slots[3], vx: 0, vy: 0, hitR: SHAPES.cross.hitR },
+      { id: 5, shape: 'hexagon',  cx: startX + 7, cy: startYBase + 7 + slots[4], vx: 0, vy: 0, hitR: SHAPES.hexagon.hitR }
     ];
     for (let i = 0; i < radroaches.length; i++) {
-      setRandomVelocity(radroaches[i], 3);
+      setRandomVelocity(radroaches[i], 4);
     }
 
     if (countdownTimer) clearInterval(countdownTimer);
@@ -244,8 +250,8 @@
       h.drawRect(cx - hf, cy - hf, cx + hf, cy + hf);
       h.drawRect(cx - hf2, cy - hf2, cx + hf2, cy + hf2);
     } else if (r.shape === 'triangle') {
-      h.drawPoly([cx, cy - hf, cx + hf, cy + hf, cx - hf, cy + hf], true);
-      h.drawPoly([cx, cy - hf2, cx + hf2, cy + hf2, cx - hf2, cy + hf2], true);
+      h.drawPoly([cx, cy - hf, cx + hf * 0.866, cy + hf * 0.5, cx - hf * 0.866, cy + hf * 0.5], true);
+      h.drawPoly([cx, cy - hf2, cx + hf2 * 0.866, cy + hf2 * 0.5, cx - hf2 * 0.866, cy + hf2 * 0.5], true);
     } else if (r.shape === 'diamond') {
       h.drawPoly([cx, cy - hf, cx + hf, cy, cx, cy + hf, cx - hf, cy], true);
       h.drawPoly([cx, cy - hf2, cx + hf2, cy, cx, cy + hf2, cx - hf2, cy], true);
@@ -275,10 +281,16 @@
     h.drawRect(18, 18, 465, 298);
     h.drawRect(19, 19, 464, 297);
 
-    // Read directly from flattened TypedArray using cached drawLine
     for (let i = 0; i < trackWalls.length; i += 8) {
-      drawLineCached(trackWalls[i], trackWalls[i+1], trackWalls[i+2], trackWalls[i+3]);
-      drawLineCached(trackWalls[i], trackWalls[i+1] + 1, trackWalls[i+2], trackWalls[i+3] + 1);
+      const lx1 = trackWalls[i], ly1 = trackWalls[i+1], lx2 = trackWalls[i+2], ly2 = trackWalls[i+3];
+      drawLineCached(lx1, ly1, lx2, ly2);
+      if (trackWalls[i+7] - trackWalls[i+5] < 6) {
+        // Horizontal wall — offset second line downward
+        drawLineCached(lx1, ly1 + 1, lx2, ly2 + 1);
+      } else {
+        // Vertical wall — offset second line rightward
+        drawLineCached(lx1 + 1, ly1, lx2 + 1, ly2);
+      }
     }
 
     h.setFont("Monofonto14").setFontAlign(-1, -1).setColor(2);
@@ -287,8 +299,8 @@
     h.setColor(3);
     h.fillRect(goalPos.x, goalPos.y, goalPos.x + goalPos.w, goalPos.y + goalPos.h);
     h.setColor(2);
-    h.fillRect(goalPos.x + 4, goalPos.y - 6, goalPos.x + 9, goalPos.y);
-    h.fillRect(goalPos.x - 4, goalPos.y + 4, goalPos.x, goalPos.y + 9);
+    h.fillRect(goalPos.x + 5, goalPos.y - 7, goalPos.x + 10, goalPos.y);
+    h.fillRect(goalPos.x - 5, goalPos.y + 5, goalPos.x, goalPos.y + 10);
   }
 
   // ─── Physics ──────────────────────────────────────────────────────────────
@@ -303,7 +315,7 @@
   function jitterVelocity(r) {
     const speed = Math.sqrt(r.vx * r.vx + r.vy * r.vy);
     const curAngle = Math.atan2(r.vy, r.vx);
-    const jitterDeg = Math.randInt(81) - 40;
+    const jitterDeg = Math.randInt(21) - 10;
     const newAngle = curAngle + jitterDeg * 0.017453292519943295;
     r.vx = Math.cos(newAngle) * speed;
     r.vy = Math.sin(newAngle) * speed;
@@ -324,23 +336,44 @@
       r.cy = 298 - hr; r.vy = -Math.abs(r.vy); bounced = true;
     }
 
-    // Checking the flattened Int16Array
     for (let i = 0; i < trackWalls.length; i += 8) {
       const wx1 = trackWalls[i+4]; // minX
       const wy1 = trackWalls[i+5]; // minY
       const wx2 = trackWalls[i+6]; // maxX
       const wy2 = trackWalls[i+7]; // maxY
 
-      if (r.cx + hr >= wx1 - hr && r.cx - hr <= wx2 + hr &&
-          r.cy + hr >= wy1 - hr && r.cy - hr <= wy2 + hr) {
+      if (r.cx + hr >= wx1 && r.cx - hr <= wx2 &&
+          r.cy + hr >= wy1 && r.cy - hr <= wy2) {
 
-        if (wy2 - wy1 < 6) {
-          r.vy = -r.vy;
-          r.cy += r.vy * 2;
-          bounced = true;
-        } else if (wx2 - wx1 < 6) {
+        // Use penetration depth on each axis to find the true contact face.
+        // The axis with the smallest overlap is the one the roach just crossed —
+        // that is the face it hit, regardless of wall orientation.
+        // This correctly handles vertex/corner contacts that the old shape-based
+        // branch got wrong, causing teleports and bad bounce angles.
+        const penLeft  = r.cx + hr - wx1;
+        const penRight = wx2 - (r.cx - hr);
+        const penTop   = r.cy + hr - wy1;
+        const penBot   = wy2 - (r.cy - hr);
+        const penX = penLeft < penRight ? penLeft : penRight;
+        const penY = penTop  < penBot   ? penTop  : penBot;
+
+        if (penX < penY) {
+          // Shallower penetration on X — hit a vertical face
+          if (penLeft < penRight) {
+            r.cx = wx1 - hr;
+          } else {
+            r.cx = wx2 + hr;
+          }
           r.vx = -r.vx;
-          r.cx += r.vx * 2;
+          bounced = true;
+        } else {
+          // Shallower penetration on Y — hit a horizontal face
+          if (penTop < penBot) {
+            r.cy = wy1 - hr;
+          } else {
+            r.cy = wy2 + hr;
+          }
+          r.vy = -r.vy;
           bounced = true;
         }
       }
@@ -348,6 +381,46 @@
 
     if (bounced) {
       jitterVelocity(r);
+      if (r.cx - hr <= 18  && r.vx < 0) r.vx = -r.vx;
+      if (r.cx + hr >= 465 && r.vx > 0) r.vx = -r.vx;
+      if (r.cy - hr <= 18  && r.vy < 0) r.vy = -r.vy;
+      if (r.cy + hr >= 298 && r.vy > 0) r.vy = -r.vy;
+
+      // Enforce minimum normal velocity so shallow-angle hits always bounce cleanly away.
+      // 1.5 out of speed-3 means the roach can never leave a wall at less than 30 degrees.
+      // We track which axis was the collision normal and boost it if below threshold,
+      // then renormalize to preserve speed.
+      const vxAbs = r.vx < 0 ? -r.vx : r.vx;
+      const vyAbs = r.vy < 0 ? -r.vy : r.vy;
+      let fixed = 0;
+      if (r.cx - hr <= 18 + 1 || r.cx + hr >= 465 - 1) {
+        // X is the normal axis (border left/right)
+        if (vxAbs < 1.5) { r.vx = r.vx < 0 ? -1.5 : 1.5; fixed = 1; }
+      }
+      if (r.cy - hr <= 18 + 1 || r.cy + hr >= 298 - 1) {
+        // Y is the normal axis (border top/bottom)
+        if (vyAbs < 1.5) { r.vy = r.vy < 0 ? -1.5 : 1.5; fixed = 1; }
+      }
+      for (let i = 0; i < trackWalls.length; i += 8) {
+        const wx1 = trackWalls[i+4], wy1 = trackWalls[i+5];
+        const wx2 = trackWalls[i+6], wy2 = trackWalls[i+7];
+        if (r.cx + hr >= wx1 - 1 && r.cx - hr <= wx2 + 1 &&
+            r.cy + hr >= wy1 - 1 && r.cy - hr <= wy2 + 1) {
+          // Mirror the penetration-depth axis decision from collision so enforcement
+          // always targets the same axis that was actually reflected.
+          const pX = (r.cx + hr - wx1) < (wx2 - (r.cx - hr)) ? (r.cx + hr - wx1) : (wx2 - (r.cx - hr));
+          const pY = (r.cy + hr - wy1) < (wy2 - (r.cy - hr)) ? (r.cy + hr - wy1) : (wy2 - (r.cy - hr));
+          if (pX < pY) {
+            if (vxAbs < 1.5) { r.vx = r.vx < 0 ? -1.5 : 1.5; fixed = 1; }
+          } else {
+            if (vyAbs < 1.5) { r.vy = r.vy < 0 ? -1.5 : 1.5; fixed = 1; }
+          }
+        }
+      }
+      if (fixed) {
+        const spd = Math.sqrt(r.vx * r.vx + r.vy * r.vy);
+        if (spd > 0) { r.vx = r.vx / spd * 3; r.vy = r.vy / spd * 3; }
+      }
     }
   }
 
@@ -371,17 +444,20 @@
           b.cx -= nx * overlap * 0.5; b.cy -= ny * overlap * 0.5;
 
           const relVel = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;
-          if (relVel >= 0) continue; 
+          if (relVel >= 0) continue;
 
-          const aDot = a.vx * nx + a.vy * ny;
-          const bDot = b.vx * nx + b.vy * ny;
-          a.vx += (bDot - aDot) * nx; a.vy += (bDot - aDot) * ny;
-          b.vx += (aDot - bDot) * nx; b.vy += (aDot - bDot) * ny;
+          const aN = a.vx * nx + a.vy * ny; // a's speed along collision normal
+          const bN = b.vx * nx + b.vy * ny; // b's speed along collision normal
+
+          a.vx += (bN - aN) * nx; a.vy += (bN - aN) * ny;
+          b.vx += (aN - bN) * nx; b.vy += (aN - bN) * ny;
 
           let sMag = Math.sqrt(a.vx * a.vx + a.vy * a.vy);
-          if (sMag > 0) { a.vx = a.vx / sMag * 3; a.vy = a.vy / sMag * 3; }
+          if (sMag > 0) { a.vx = a.vx / sMag * 4; a.vy = a.vy / sMag * 4; }
           sMag = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
-          if (sMag > 0) { b.vx = b.vx / sMag * 3; b.vy = b.vy / sMag * 3; }
+          if (sMag > 0) { b.vx = b.vx / sMag * 4; b.vy = b.vy / sMag * 4; }
+          jitterVelocity(a);
+          jitterVelocity(b);
         }
       }
     }
@@ -435,8 +511,8 @@
     for (let i = 0; i < radroaches.length; i++) {
       const r = radroaches[i];
       const hr = r.hitR;
-      if (r.cx + hr >= goalPos.x && r.cx - hr <= goalPos.x + goalPos.w &&
-          r.cy + hr >= goalPos.y && r.cy - hr <= goalPos.y + goalPos.h) {
+      if (r.cx + hr >= goalPos.x && r.cx - hr <= goalPos.x + goalPos.hitW &&
+          r.cy + hr >= goalPos.y && r.cy - hr <= goalPos.y + goalPos.hitH) {
         gameState = 'GAMEOVER';
         winnerId = r.id;
         Pip.audioStart('HOLO/RADROACH_RACES/WINNER.WAV');
