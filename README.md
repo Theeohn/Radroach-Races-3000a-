@@ -23,7 +23,5 @@ A version of the internet famous "Horse Race Tests" game now for your Pip-boy. S
 
 ### License(s)
 
-This game is licensed under the MIT License. See
-[MIT](https://opensource.org/license/mit/) for more information.
+CC-BY-NC-4.0 - The Creative Commons license that allows others to remix, tweak, and build upon a work non-commercially, as long as they credit the original creator. This license does not permit commercial use of the licensed material.
 
-`SPDX-License-Identifier: MIT`

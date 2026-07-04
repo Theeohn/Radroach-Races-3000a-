@@ -131,7 +131,10 @@
     gameState = 'TITLE_SCREEN';
     winnerId = -1;
 
-    h.setColor(0).fillRect(0, 0, 480, 320).setColor(2).drawRect(18, 18, 465, 298);
+    h.setColor(0)
+     .fillRect(0, 0, 480, 320)
+     .setColor(2)
+     .drawRect(18, 18, 465, 298);
 
     h.setFont("Monofonto36").setFontAlign(0, -1).setColor(3).drawString("RADROACH RACES", 240, 52).setFont("Monofonto18").setFontAlign(0, -1).setColor(2).drawString("by Theeohn", 360, 94);
 
@@ -154,7 +157,7 @@
   function handleKnobStart(dir) {
     if (dir !== 0) return;
     if (gameState === 'TITLE_SCREEN') {
-      Pip.audioStart('HOLO/RADROACH_RACES/assets/BUGLE.WAV');
+      Pip.audioStart('HOLO/RADROACH_RACES/BUGLE.WAV');
       startCountdown();
     } else if (gameState === 'GAMEOVER') {
       showTitleScreen();
@@ -344,7 +347,7 @@
     if (bounced) {
       if (getTime() - lastFlapTime >= 0.2) {
         lastFlapTime = getTime();
-        Pip.audioStart('HOLO/RADROACH_RACES/assets/FLAP.WAV');
+        Pip.audioStart('HOLO/RADROACH_RACES/FLAP.WAV');
       }
 
       const vxAbs = r.vx < 0 ? -r.vx : r.vx;
@@ -404,7 +407,7 @@
 
           if (getTime() - lastFlapTime >= 0.2) {
             lastFlapTime = getTime();
-            Pip.audioStart('HOLO/RADROACH_RACES/assets/FLAP.WAV');
+            Pip.audioStart('HOLO/RADROACH_RACES/FLAP.WAV');
           }
         }
       }
@@ -466,7 +469,7 @@
       if (r.cx >= goalX1 && r.cx <= goalX2 && r.cy >= goalY1 && r.cy <= goalY2) {
         gameState = 'GAMEOVER';
         winnerId = r.id;
-        Pip.audioStart('HOLO/RADROACH_RACES/assets/WINNER.WAV');
+        Pip.audioStart('HOLO/RADROACH_RACES/WINNER.WAV');
         break;
       }
     }
@@ -501,7 +504,7 @@
   mainLoopInterval = setInterval(mainLoop, 33); // ~30fps
 
   return {
-    id: "RADROACHRACES",
+    id: "radroachraces",
     notDefault: true,
     fullscreen: true,
     remove: function() {
