@@ -11,17 +11,28 @@
 - [Pip-Boy](https://www.Pip-Boy.com)
 - [Pip-Boy Apps](https://github.com/CodyTolene/pip-boy-3000-holotapes)
 
+**Contributor(s):**
+
+- [Cody Tolene](https://github.com/CodyTolene)
+
 ### Description
 
-A version of the internet famous "Horse Race Tests" game now for your Pip-boy. Start the game up, 5 seconds to place your bets and they're off! Using logic similar to the DVD bouncing logo to race to the mutfruit at the end, who will win? 10 seperate tracks, 5 shapes for your roaches. Endless hours of fun watching, betting, and forming your own headcanons!
+A version of the internet famous Horse Race Tests game now for your Pip-boy.
+Start the game up, 5 seconds to place your bets and they're off! Using
+logic similar to the DVD bouncing logo to race to the mutfruit at the end,
+who will win? 5 Roaches, 10 seperate tracks. Endless hours of fun watching,
+betting, and forming your own headcanons!
 
 ### Controls
 
 - Press the left knob to begin the race.
 - Press the left knob again to start another!
-- Press any of the bottom three buttons to exit the game, or power button to reset the device.
+- Press any of the bottom three buttons to exit the game, or power button to
+  reset the device.
 
 ### License(s)
 
-CC-BY-NC-4.0 - The Creative Commons license that allows others to remix, tweak, and build upon a work non-commercially, as long as they credit the original creator. This license does not permit commercial use of the licensed material.
+This game is licensed under the MIT License. See
+[MIT](https://opensource.org/license/mit/) for more information.
 
+`SPDX-License-Identifier: MIT`
