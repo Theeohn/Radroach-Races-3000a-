@@ -61,7 +61,7 @@
     5: 'DIAMOND',
   };
 
-  const ROACH_HIT_R = 10.7;
+  const ROACH_HIT_R = 11.4;
   const ROACH_R_SUM = ROACH_HIT_R * 2; // a.hitR + b.hitR is always this
 
   const JITTER_COS = new Float32Array(21);
