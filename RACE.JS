@@ -5,12 +5,13 @@
 //  Repository: https://github.com/Theeohn/Radroach-Races
 // =============================================================================
 //  File: RACE.JS (scene)
-//  Description: Runs a single race. Picks a track, counts down the betting
-//  timer, simulates the roaches until one reaches the mutfruit, then waits
-//  for the left knob press to return to the title screen.
+//  Description: Runs a single race on the map chosen at the title screen
+//  (or a random one). Counts down the betting timer, simulates the roaches
+//  until one reaches the mutfruit, then waits for the left knob press to
+//  return to the title screen.
 // =============================================================================
 
-(function (app) {
+(function (app, params) {
   const drawLineCached = h.drawLine.bind(h);
   const fillRectCached = h.fillRect.bind(h);
   const drawImageCached = h.drawImage.bind(h);
@@ -29,11 +30,11 @@
   let mainLoopInterval = null;
   let countdownTimer = null;
 
-  // Set to 0 for random map, or 1–10 to force a specific map for testing.
-  const TEST_MAP = 0;
+  // params.mapId comes from the title screen selector:
+  // 0 = Random Map, 1-16 = a specific map (1-based).
 
-  const ROACH_SPEED = 4.5; // Speed of roach in pixels per frame
-  const ROACH_WALL_SPEED = 3.5; // Speed of roach in pixels per frame after wall bounces
+  const ROACH_SPEED = 4; // Speed of roach in pixels per frame
+  const ROACH_WALL_SPEED = 4; // Speed of roach in pixels per frame after wall bounces
 
   // Game States: COUNTDOWN -> RACING -> GAMEOVER
   let gameState = 'COUNTDOWN';
@@ -73,7 +74,6 @@
   }
 
   // ─── Track Loading ────────────────────────────────────────────────────────
-
   /**
    * Pick a track, copy its walls out of the map data, and spawn the roaches.
    * The map data is released again once the track is extracted.
@@ -82,7 +82,8 @@
   function loadTrack() {
     let MAP_DATA = eval(fs.readFileSync('HOLO/RADROACH_RACES/MAPS.JS'));
 
-    currentMapId = TEST_MAP > 0 ? TEST_MAP - 1 : Math.randInt(16);
+    currentMapId =
+      params && params.mapId > 0 ? params.mapId - 1 : Math.randInt(16);
 
     let base = 0;
     for (let i = 0; i < currentMapId; i++) {
@@ -137,7 +138,6 @@
   }
 
   // ─── Countdown ────────────────────────────────────────────────────────────
-
   function tickCountdown() {
     if (gameState !== 'COUNTDOWN') return;
 
@@ -168,7 +168,6 @@
   }
 
   // ─── Drawing ──────────────────────────────────────────────────────────────
-
   /**
    * Draw a roach's type shape, outlined exactly to its collision hitbox
    * radius. Shapes are always drawn in a fixed orientation (never rotated
@@ -240,9 +239,6 @@
       return;
     }
 
-    // Shape sits behind the sprite (fixed orientation, never rotated) so
-    // it peeks out around the roach on top, making each racer's type
-    // identifiable at a glance.
     for (let i = 0; i < radroaches.length; i++) {
       const r = radroaches[i];
       h.setColor(2);
@@ -287,9 +283,9 @@
 
     if (clipX2 >= 225 && clipX1 <= 320 && clipY2 >= 302 && clipY1 <= 316) {
       h.setFont('Monofonto14')
-        .setFontAlign(-1, -1)
+        .setFontAlign(0, -1)
         .setColor(3)
-        .drawString('Map ' + (currentMapId + 1), 225, 302);
+        .drawString('Radroach Races  ~  Map ' + (currentMapId + 1), 240, 302);
     }
 
     const goalX1 = goalPos.x - 6,
@@ -316,7 +312,6 @@
   }
 
   // ─── Physics ──────────────────────────────────────────────────────────────
-
   function setRandomVelocity(r, speed) {
     const deg = Math.randInt(400);
     const rad = deg * 0.017453292519943295;
@@ -362,7 +357,6 @@
     }
 
     // ── Interior walls: circle vs line-segment ────────────────────────────────
-
     for (let i = 0; i < trackWalls.length; i += 4) {
       const x1 = trackWalls[i],
         y1 = trackWalls[i + 1];
@@ -604,7 +598,6 @@
   }
 
   // ─── Main Loop ────────────────────────────────────────────────────────────
-
   function mainLoop() {
     'ram';
     if (gameState === 'RACING') {
@@ -626,10 +619,8 @@
   }
 
   // ─── Init ─────────────────────────────────────────────────────────────────
-
   loadTrack();
 
-  // Roach image
   // Head (top of image) faces the direction of travel.
   try {
     const data = JSON.parse(fs.readFileSync('HOLO/RADROACH_RACES/ROACH.JSON'));

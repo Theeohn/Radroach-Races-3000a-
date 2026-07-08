@@ -5,21 +5,56 @@
 //  Repository: https://github.com/Theeohn/Radroach-Races
 // =============================================================================
 //  File: TITLE.JS (scene)
-//  Description: Draws the title screen and waits for the left knob press to
-//  start a race.
+//  Description: Draws the title screen with a single map selector box.
+//  Knob1 and knob2 both scroll through Random Map + Maps 1-16, wrapping in
+//  both directions, and a press on either knob launches a race on the
+//  selected map.
 // =============================================================================
 
 (function (app) {
-  /**
-   * Handle the left scroll wheel input
-   * @param dir The direction of the scroll wheel
-   * @returns {void} Nothing
-   */
-  function onKnob1(dir) {
-    if (dir !== 0) return;
+  let selected = 0; // 0 = Random Map, 1-16 = Map 1-16
 
-    Pip.audioStart('HOLO/RADROACH_RACES/BUGLE.WAV');
-    app.go(app.scenes.RACE);
+  /**
+   * @returns {void}
+   */
+  function drawSelector() {
+    h.setColor(0)
+      .fillRect(130, 238, 350, 270)
+      .setColor(3)
+      .drawRect(132, 240, 348, 268);
+
+    h.setFont('Monofonto18')
+      .setFontAlign(-1, 0)
+      .drawString('<', 144, 254)
+      .setFontAlign(1, 0)
+      .drawString('>', 336, 254)
+      .setFont('Monofonto23')
+      .setFontAlign(0, 0)
+      .drawString(
+        selected === 0
+          ? 'Random Map'
+          : 'Map ' + (selected < 10 ? '0' + selected : selected),
+        240,
+        255,
+      );
+  }
+
+  /**
+   * @param dir
+   * @returns {void}
+   */
+  function onKnob(dir) {
+    if (dir === 0) {
+      Pip.audioStart('HOLO/RADROACH_RACES/BUGLE.WAV');
+      app.go(app.scenes.RACE, { mapId: selected });
+      return;
+    }
+
+    selected = (selected + dir + 17) % 17;
+    Pip.playSound('SCROLL');
+    drawSelector();
+    h.flip();
+    Pip.lastFlip = getTime();
   }
 
   h.setColor(0).fillRect(0, 0, 480, 320).setColor(2).drawRect(18, 18, 465, 298);
@@ -35,7 +70,7 @@
     .setFont('Monofonto14')
     .setFontAlign(0, -1)
     .setColor(2)
-    .drawString('v2.0', 450, 282);
+    .drawString('v2.0.1', 444, 282);
 
   h.setColor(2).drawLine(55, 180, 425, 180).drawLine(55, 200, 425, 200);
   for (let fx = 75; fx < 425; fx += 35) {
@@ -56,19 +91,23 @@
     .drawPoly([275, 165, 300, 175, 315, 200], false)
     .drawPoly([280, 190, 305, 200, 320, 230], false);
 
-  h.setFont('Monofonto23')
+  drawSelector();
+
+  h.setFont('Monofonto14')
     .setFontAlign(0, -1)
     .setColor(3)
-    .drawString('PRESS LEFT WHEEL TO START!', 240, 255);
+    .drawString('PRESS LEFT WHEEL TO RACE!', 241, 278);
 
   h.flip();
   Pip.lastFlip = getTime();
 
-  Pip.onExclusive('knob1', onKnob1);
+  Pip.onExclusive('knob1', onKnob);
+  Pip.onExclusive('knob2', onKnob);
 
   return {
     remove: function () {
-      Pip.removeListener('knob1', onKnob1);
+      Pip.removeListener('knob1', onKnob);
+      Pip.removeListener('knob2', onKnob);
     },
   };
 });
