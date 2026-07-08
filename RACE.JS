@@ -82,7 +82,7 @@
   function loadTrack() {
     let MAP_DATA = eval(fs.readFileSync('HOLO/RADROACH_RACES/MAPS.JS'));
 
-    currentMapId = TEST_MAP > 0 ? TEST_MAP - 1 : Math.randInt(10);
+    currentMapId = TEST_MAP > 0 ? TEST_MAP - 1 : Math.randInt(16);
 
     let base = 0;
     for (let i = 0; i < currentMapId; i++) {
@@ -111,11 +111,11 @@
     MAP_DATA = null;
     app.gc();
 
-    // Maps 2, 6, 8 (0-based: 1, 5, 7) use horizontal spawn spread; all others
-    // use vertical.
+    // Maps 3, 4, 6, 8, 12, 13 (0-based: 2, 3, 5, 7, 11, 12) use horizontal
+    // spawn spread; all others use vertical.
     const horizSpawn =
-      currentMapId === 1 || currentMapId === 5 || currentMapId === 7;
-
+      currentMapId === 2 || currentMapId === 3 || currentMapId === 5 ||
+      currentMapId === 7 || currentMapId === 11 || currentMapId === 12;
     const slots = horizSpawn ? [0, 21, 42, 63, 84] : [0, 23, 44, 65, 86];
     for (let s = 4; s > 0; s--) {
       const sv = Math.randInt(s + 1);
@@ -123,7 +123,6 @@
       slots[s] = slots[sv];
       slots[sv] = tmp;
     }
-
     radroaches = [];
     for (let i = 0; i < 5; i++) {
       radroaches.push({

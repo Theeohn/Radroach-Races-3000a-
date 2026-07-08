@@ -2,7 +2,7 @@
 //  Name: Radroach Races
 //  Author: Theeohn Megistus
 //  License: MIT
-//  Repository: https://github.com/Theeohn/Radroach-Races
+//  Repository: https://github.com/Theeohn/Radroach-Races-3000a
 // =============================================================================
 //  File: APP.JS (main, scene manager)
 //  Description: This is the main shell for the holotape, a "scene" manager

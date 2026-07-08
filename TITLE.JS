@@ -31,7 +31,11 @@
     .setFont('Monofonto18')
     .setFontAlign(0, -1)
     .setColor(2)
-    .drawString('by Theeohn', 360, 94);
+    .drawString('by Theeohn', 360, 94)
+    .setFont('Monofonto14')
+    .setFontAlign(0, -1)
+    .setColor(2)
+    .drawString('v2.0', 450, 282);
 
   h.setColor(2).drawLine(55, 180, 425, 180).drawLine(55, 200, 425, 200);
   for (let fx = 75; fx < 425; fx += 35) {
