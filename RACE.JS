@@ -25,6 +25,16 @@
     WINNER: 'HOLO/RADROACH_RACES/WINNER.WAV',
   };
 
+  // Winner overlay art, keyed by roach id (matches the id assignments
+  // used for hitbox shapes in drawRoachShape()).
+  const WINNER_IMG = {
+    1: 'HOLO/RADROACH_RACES/CIRCLEW.BIN',
+    2: 'HOLO/RADROACH_RACES/TRIANGLEW.BIN',
+    3: 'HOLO/RADROACH_RACES/DELTAW.BIN',
+    4: 'HOLO/RADROACH_RACES/SQUAREW.BIN',
+    5: 'HOLO/RADROACH_RACES/DAIMONDW.BIN',
+  };
+
   const dirty = new Int16Array(20);
 
   let mainLoopInterval = null;
@@ -50,17 +60,12 @@
   let trackDirty = 1;
   let lastFlapTime = 0;
   let roachImage = null;
+  
+  let gameOverTime = 0;
+  let lastBlinkState = -1;
 
   // Rotate options
   const rotOpts = { rotate: 0 };
-
-  const ROACH_NAMES = {
-    1: 'CIRCLE',
-    2: 'TRIANGLE',
-    3: 'DELTA',
-    4: 'SQUARE',
-    5: 'DIAMOND',
-  };
 
   const ROACH_HIT_R = 11.4;
   const ROACH_R_SUM = ROACH_HIT_R * 2; // a.hitR + b.hitR is always this
@@ -172,8 +177,8 @@
    * Draw a roach's type shape, outlined exactly to its collision hitbox
    * radius. Shapes are always drawn in a fixed orientation (never rotated
    * with travel direction) so Square never gets confused for Diamond, etc.
-   * @param r The roach to draw the shape for
-   * @returns {void} Nothing
+   * @param r
+   * @returns {void}
    */
   function drawRoachShape(r) {
     'ram';
@@ -241,7 +246,7 @@
 
     for (let i = 0; i < radroaches.length; i++) {
       const r = radroaches[i];
-      h.setColor(2);
+      h.setColor(3);
       drawRoachShape(r);
 
       // Head (top of image) points along the direction of travel.
@@ -568,6 +573,8 @@
       ) {
         gameState = 'GAMEOVER';
         winnerId = r.id;
+        gameOverTime = getTime();
+        lastBlinkState = -1; // Reset to force immediate evaluation
         Pip.audioStart(SFX.WINNER);
         break;
       }
@@ -576,25 +583,59 @@
     drawAllRoaches();
 
     if (gameState === 'GAMEOVER') {
-      displayWinner();
+      updateGameOverAnimation();
+    } else {
+      h.flip();
+      Pip.lastFlip = getTime();
     }
+  }
 
-    h.flip();
-    Pip.lastFlip = getTime();
+  function updateGameOverAnimation() {
+    'ram';
+    const elapsed = getTime() - gameOverTime;
+    
+    const showWinner = Math.floor(elapsed / 2.6) % 2 === 0;
+
+    if (showWinner !== lastBlinkState) {
+      lastBlinkState = showWinner;
+
+      if (showWinner) {
+        displayWinner();
+      } else {
+        h.setColor(0).fillRect(0, 0, 480, 320);
+        drawTrack();
+        drawAllRoaches();
+
+        h.flip();
+        Pip.lastFlip = getTime();
+      }
+    }
   }
 
   function displayWinner() {
-    h.setColor(0)
-      .fillRect(120, 130, 360, 190)
-      .setColor(3)
-      .drawRect(122, 132, 358, 188);
+    try {
+      let file = E.openFile(WINNER_IMG[winnerId], 'r');
+      let target = new Uint8Array(h.buffer);
+      let offset = target.length;
+      let chunk = file.read(256);
+      while (chunk) {
+        offset -= chunk.length;
+        target.set(chunk, offset);
+        chunk = file.read(256);
+      }
+      file.close();
+    } catch (e) {}
 
-    h.setFont('Monofonto16')
-      .setFontAlign(0, -1)
-      .setColor(3)
-      .drawString('"' + ROACH_NAMES[winnerId] + '" ROACH WINS!!!', 240, 140)
-      .setFont('Monofonto14')
-      .drawString('Press left wheel to race again!', 240, 167);
+    h.setColor(0)
+     .fillRect(128, 282, 351, 309)
+     .setColor(3)
+     .drawRect(130, 284, 349, 307);
+
+    h.setFont('Monofonto14')
+     .drawString('Press left wheel to race again!', 241, 289);
+
+    h.flip();
+    Pip.lastFlip = getTime();
   }
 
   // ─── Main Loop ────────────────────────────────────────────────────────────
@@ -602,13 +643,15 @@
     'ram';
     if (gameState === 'RACING') {
       updatePhysics();
+    } else if (gameState === 'GAMEOVER') {
+      updateGameOverAnimation();
     }
   }
 
   /**
    * Handle the left scroll wheel input
-   * @param dir The direction of the scroll wheel
-   * @returns {void} Nothing
+   * @param dir
+   * @returns {void}
    */
   function onKnob1(dir) {
     if (dir !== 0) return;
