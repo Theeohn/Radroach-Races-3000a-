@@ -7,13 +7,13 @@
 //  File: TITLE.JS (scene)
 //  Description: Draws the title screen using the full-screen TITLEIMG.JSON
 //  bitmap as the backdrop, with a single map selector box on top. Knob1 and
-//  knob2 both scroll through Random Map + Maps 1-16, wrapping in both
+//  knob2 both scroll through Random Map + Maps 1-20, wrapping in both
 //  directions, and a press on either knob launches a race on the selected
 //  map.
 // =============================================================================
 
 (function(app) {
-  let selected = 0; // 0 = Random Map, 1-16 = Map 1-16
+  let selected = 0; // 0 = Random Map, 1-20 = Map 1-20
 
   /**
    * @returns {void}
@@ -51,7 +51,7 @@
       return;
     }
 
-    selected = (selected + dir + 17) % 17;
+    selected = (selected + dir + 21) % 21;
     Pip.audioStart('HOLO/RADROACH_RACES/FLAP.WAV');
     drawSelector();
     h.flip();

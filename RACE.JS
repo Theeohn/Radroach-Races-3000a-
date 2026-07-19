@@ -32,7 +32,7 @@
     2: 'HOLO/RADROACH_RACES/TRIANGLEW.BIN',
     3: 'HOLO/RADROACH_RACES/DELTAW.BIN',
     4: 'HOLO/RADROACH_RACES/SQUAREW.BIN',
-    5: 'HOLO/RADROACH_RACES/DAIMONDW.BIN',
+    5: 'HOLO/RADROACH_RACES/DIAMONDW.BIN',
   };
 
   const dirty = new Int16Array(20);
@@ -41,7 +41,7 @@
   let countdownTimer = null;
 
   // params.mapId comes from the title screen selector:
-  // 0 = Random Map, 1-16 = a specific map (1-based).
+  // 0 = Random Map, 1-20 = a specific map (1-based).
 
   const ROACH_SPEED = 4; // Speed of roach in pixels per frame
   const ROACH_WALL_SPEED = 4; // Speed of roach in pixels per frame after wall bounces
@@ -88,7 +88,7 @@
     let MAP_DATA = eval(fs.readFileSync('HOLO/RADROACH_RACES/MAPS.JS'));
 
     currentMapId =
-      params && params.mapId > 0 ? params.mapId - 1 : Math.randInt(16);
+      params && params.mapId > 0 ? params.mapId - 1 : Math.randInt(20);
 
     let base = 0;
     for (let i = 0; i < currentMapId; i++) {
@@ -117,11 +117,12 @@
     MAP_DATA = null;
     app.gc();
 
-    // Maps 3, 4, 6, 8, 12, 13 (0-based: 2, 3, 5, 7, 11, 12) use horizontal
+    // Maps 2, 4, 5, 7, 9, 12, 15, 16 (0-based: 1, 3, 4, 6, 8, 11, 14, 15) use horizontal
     // spawn spread; all others use vertical.
     const horizSpawn =
-      currentMapId === 2 || currentMapId === 3 || currentMapId === 5 ||
-      currentMapId === 7 || currentMapId === 11 || currentMapId === 12;
+      currentMapId === 1 || currentMapId === 3 || currentMapId === 4 ||
+      currentMapId === 6 || currentMapId === 8 || currentMapId === 11 ||
+      currentMapId === 14 || currentMapId === 15;
     const slots = horizSpawn ? [0, 21, 42, 63, 84] : [0, 23, 44, 65, 86];
     for (let s = 4; s > 0; s--) {
       const sv = Math.randInt(s + 1);
@@ -594,7 +595,7 @@
     'ram';
     const elapsed = getTime() - gameOverTime;
     
-    const showWinner = Math.floor(elapsed / 2.6) % 2 === 0;
+    const showWinner = Math.floor(elapsed / 2.3) % 2 === 0;
 
     if (showWinner !== lastBlinkState) {
       lastBlinkState = showWinner;
